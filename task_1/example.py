@@ -1,5 +1,9 @@
-def hello_world(input: str) -> str:
-	return str
+"""
+This code contains example of function which return string
+"""
 
-def test_hello_world():
-	assert hello_world("Hello world")
+
+def hello_world(message: str) -> str:
+    """Func to return original string"""
+
+    return message
