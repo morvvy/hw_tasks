@@ -42,15 +42,13 @@ def pairwise_operations(lst1, lst2, operation):
 
 
 def modify_external_state(lst): # добавление строки "modified"
-
+    pass
 
 def compute_difference(a, b):
-
+    pass
 
 def infinite_sequence(start, limit): # использование yield
-    while start <= limit:
-        yield start
-        start += 1
+    pass
 
 
 """
