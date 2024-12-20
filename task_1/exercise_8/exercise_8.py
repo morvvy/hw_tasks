@@ -22,7 +22,21 @@ __exit__(self, exc_type, exc_value, traceback): Метод, который во�
 
 # Контекстный менеджер
 class MultiTempAttributes:
-    pass
+    def __init__(self, obj, attrs_values: Dict):
+        self.obj = obj
+        self.attrs_values = attrs_values
+        self.original_values = {}  # хранение исходных значений
+
+    def __enter__(self):
+        for attr, value in self.attrs_values.items():
+            if hasattr(self.obj, attr):
+                self.original_values[attr] = getattr(self.obj, attr)
+                setattr(self.obj, attr, value)
+        return self.obj  # объект с измененными атрибутами
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        for attr, value in self.original_values.items():
+            setattr(self.obj, attr, value)
 
 
 """
@@ -39,7 +53,20 @@ class MultiTempAttributes:
 
 
 def count_unique_words(text: str) -> int:
-    pass
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    words = text.split()
+
+    unique_words = set()
+
+    unique_words_count = 0
+
+    for word in words:
+        if word not in unique_words:
+            unique_words_count += 1
+            unique_words.add(word)
+
+    return unique_words_count
 
 
 """
@@ -60,8 +87,25 @@ numbers: Список целых чисел.
 
 
 def analyze_even_numbers(numbers: List[int]) -> Dict[str, Optional[float]]:
-    pass
+    even_numbers = [num for num in numbers if num % 2 == 0]
 
+    if not even_numbers:
+        return {
+            "count": 0,
+            "sum": None,
+            "average": None,
+            "max": None,
+            "min": None,
+        }
+
+    result = {
+        "count": len(even_numbers),
+        "sum": sum(even_numbers),
+        "average": sum(even_numbers) / len(even_numbers),
+        "max": max(even_numbers),
+        "min": min(even_numbers),
+    }
+    return result
 
 """
 № 4 Проверка уникальности элементов в вложенных структурах данных
@@ -82,7 +126,19 @@ def analyze_even_numbers(numbers: List[int]) -> Dict[str, Optional[float]]:
 def all_unique_elements(data) -> bool:
     def flatten(d):
         """Вспомогательная функция для рекурсивного разворачивания вложенных структур"""
-        pass
+        for el in d:
+            if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
+                yield from flatten(el)
+            else:
+                yield el
+
+    seen = set()
+    for item in flatten(data):
+        if item is not None:
+            if item in seen:
+                return False
+            seen.add(item)
+    return True
 
 
 """
@@ -107,7 +163,20 @@ def enumerate_list(
     data: list, start: int = 0, step: int = 1, recursive: bool = False
 ) -> list:
     def recursive_enumerate(lst, idx):
-        pass
+        result = []
+        for i, item in enumerate(lst):
+            if recursive and isinstance(item, list):
+                result.extend(recursive_enumerate(item, idx))
+                idx += len(item)
+            else:
+                result.append((idx, item))
+                idx += step
+        return result
+
+    if recursive:
+        return recursive_enumerate(data, start)
+    else:
+        return [(start + i * step, item) for i, item in enumerate(data)]
 
 
 """
@@ -136,4 +205,53 @@ logging.basicConfig(level=logging.INFO)
 
 
 class DatabaseConnection:
-    pass
+    def __init__(self, db_name: str):
+        self.db_name = db_name
+        self.connection = None
+        self.transaction_active = False
+        self.logger = logging.getLogger(__name__)
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            self.rollback()
+        else:
+            if self.transaction_active:
+                self.commit()
+        self.close()
+
+    def connect(self):
+        if self.connection is None:
+            self.connection = f"Connected to {self.db_name} database"
+            self.logger.info(f"Connected to database: {self.db_name}")
+
+    def close(self):
+        if self.connection is not None:
+            self.connection = None
+            self.logger.info(f"Disconnected from database: {self.db_name}")
+
+    def execute_query(self, query: str):
+        if self.transaction_active:
+            return f"Result of '{query}'"
+        else:
+            raise RuntimeError("No active transaction")
+
+    def start_transaction(self):
+        if not self.transaction_active:
+            self.transaction_active = True
+            self.logger.info("Transaction started.")
+
+    def commit(self):
+        if self.transaction_active:
+            self.transaction_active = False
+            self.logger.info("Transaction committed.")
+        else:
+            raise RuntimeError("No active transaction to commit")
+
+    def rollback(self):
+        if self.transaction_active:
+            self.transaction_active = False
+            self.logger.info("Transaction rolled back.")
